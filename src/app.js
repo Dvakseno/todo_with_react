@@ -1,47 +1,49 @@
 import React, { Component } from 'react';
 
+import { connect } from 'react-redux';
+import { todo_add, value_change } from './components/actions';
+
 import List from './components/list';
 
-export default class App extends Component {
-  state = {
-    todos: [
-      { todo: 'Make a todo-app', id: 1, complete: false },
-      { todo: 'Learn Middlewares', id: 2, complete: false }
-    ],
-    value: ''
+class App extends Component {
+  changeHandler = value => {
+    this.props.value_change(value);
   };
-  changeHandler = event => {
-    this.setState({ value: event.target.value });
-  };
-  sendHandler = inputValue => {
-    const value = { todo: inputValue, id: this.state.todos.length + 1, complete: false };
-    this.setState(prevState => ({ todos: [...prevState.todos, value], value: '' }));
-  };
-  completeTask = id => {
-    this.setState(prevState => ({
-      todos: prevState.todos.map(item => {
-        if (item.id === id) {
-          return { ...item, complete: !item.complete };
-        } else {
-          return { ...item };
-        }
-      })
-    }));
+  addHandler = todo => {
+    const { todos, todo_add, value_change } = this.props;
+    const id = todos.length;
+    todo_add(id, todo);
+    value_change('');
   };
   render() {
+    const { value } = this.props;
     return (
       <>
         <form onSubmit={e => e.preventDefault()}>
           <input
             type="text"
             placeholder="Enter a task..."
-            onChange={this.changeHandler}
-            value={this.state.value}
+            value={value}
+            onChange={event => this.changeHandler(event.target.value)}
           />
-          <button onClick={() => this.sendHandler(this.state.value)}>Add task</button>
+          <button onClick={() => this.addHandler(value)}>Add task</button>
         </form>
-        <List todos={this.state.todos} completeTask={this.completeTask} />
+        <List />
       </>
     );
   }
 }
+
+function mapStateToProps(state) {
+  return { value: state.todoState.value, todos: state.todoState.todos };
+}
+function mapDispatchToProps(dispatch) {
+  return {
+    todo_add: (id, name) => dispatch(todo_add(id, name)),
+    value_change: value => dispatch(value_change(value)),
+  };
+}
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);
